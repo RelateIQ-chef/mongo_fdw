@@ -446,9 +446,6 @@ MongoBeginForeignScan(ForeignScanState *scanState, int executorFlags)
 	MongoFdwOptions          *options = NULL;
 	MongoFdwModifyState      *fmstate = NULL;
 	List                     *opExpressionList = NIL;
-	RangeTblEntry            *rte;
-	EState                   *estate = scanState->ss.ps.state;
-	ForeignScan              *fsplan = (ForeignScan *) scanState->ss.ps.plan;
 	Oid                      userid;
 	ForeignServer            *server;
 	UserMapping              *user;
@@ -467,8 +464,7 @@ MongoBeginForeignScan(ForeignScanState *scanState, int executorFlags)
 	 * Identify which user to do the remote access as.  This should match what
 	 * ExecCheckRTEPerms() does.
 	 */
-	rte = rt_fetch(fsplan->scan.scanrelid, estate->es_range_table);
-	userid = rte->checkAsUser ? rte->checkAsUser : GetUserId();
+	userid = GetUserId();
 
 	/* Get info about foreign table. */
 	fmstate->rel = scanState->ss.ss_currentRelation;
@@ -1877,7 +1873,6 @@ MongoAnalyzeForeignTable(Relation relation,
 	double             foreignTableSize = 0;
 
 	foreignTableId = RelationGetRelid(relation);
-
 	documentCount = ForeignTableDocumentCount(foreignTableId);
 
 	if (documentCount > 0.0)
@@ -1904,7 +1899,6 @@ MongoAnalyzeForeignTable(Relation relation,
 
 	(*totalPageCount) = pageCount;
 	(*acquireSampleRowsFunc) = MongoAcquireSampleRows;
-
 	return true;
 }
 
@@ -2006,7 +2000,6 @@ MongoAcquireSampleRows(Relation relation, int errorLevel,
 
 	columnValues = (Datum *) palloc0(columnCount * sizeof(Datum));
 	columnNulls = (bool *) palloc0(columnCount * sizeof(bool));	
-
 	for (;;)
 	{
 		/* check for user-requested abort or sleep */
@@ -2098,7 +2091,6 @@ MongoAcquireSampleRows(Relation relation, int errorLevel,
 
 		rowCount += 1;
 	}
-
 	/* clean up */
 	MemoryContextDelete(tupleContext);
 	MongoFreeScanState(fmstate);
