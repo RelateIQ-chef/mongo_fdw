@@ -51,28 +51,6 @@ function install_mongoc_driver
 	cd ..
 }
 
-###
-# Cleanup the system
-#
-function cleanup
-{
-	rm config.h
-	touch config.h
-}
-
-###
-# Create a config file and append #define META_DRIVER which will be
-# used in case of Meta Driver (master branch) option.
-#
-function create_config
-{
-	echo "#ifdef __CONFIG__" >> config.h
-	echo "#define META_DRIVER" >> config.h
-	echo "#endif" >> config.h
-}
-
-cleanup
-
 if [ "--with-legacy" = $1 ]; then
 	checkout_mongo_driver
 	checkout_legacy_branch
@@ -81,7 +59,6 @@ if [ "--with-legacy" = $1 ]; then
 elif [ "--with-master" == $1 ]; then
 	checkout_mongo_driver
 	install_mongoc_driver
-	create_config
 	export PKG_CONFIG_PATH=mongo-c-driver/src/:mongo-c-driver/src/libbson/src
 	cp Makefile.meta Makefile
 	echo "Done"
